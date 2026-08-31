@@ -1,0 +1,325 @@
+{
+  "name": "vscode-quecpi",
+  "displayName": "QuecPi H1 DevKit",
+  "description": "CodeBuddy-style build/debug/chat toolkit for the QuecPi H1 (QCM6490) Qualcomm Linux BSP",
+  "version": "0.1.0",
+  "publisher": "quecpi",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other",
+    "Debuggers",
+    "Machine Learning"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "quecpi.panel",
+        "title": "QuecPi: Open Panel",
+        "category": "QuecPi"
+      },
+      {
+        "command": "quecpi.panelPopout",
+        "title": "QuecPi: Pop Out Panel",
+        "category": "QuecPi"
+      },
+      {
+        "command": "quecpi.buildconfig",
+        "title": "QuecPi: Build Config (buildconfig)",
+        "category": "QuecPi"
+      },
+      {
+        "command": "quecpi.buildall",
+        "title": "QuecPi: Build All (buildall)",
+        "category": "QuecPi"
+      },
+      {
+        "command": "quecpi.buildClean",
+        "title": "QuecPi: Clean Build (从头重建)",
+        "category": "QuecPi"
+      },
+      {
+        "command": "quecpi.buildkernel",
+        "title": "QuecPi: Build Kernel (buildkernel)",
+        "category": "QuecPi"
+      },
+      {
+        "command": "quecpi.builddtb",
+        "title": "QuecPi: Build DTB (builddtb)",
+        "category": "QuecPi"
+      },
+      {
+        "command": "quecpi.buildpackage",
+        "title": "QuecPi: Package Images (buildpackage)",
+        "category": "QuecPi"
+      },
+      {
+        "command": "quecpi.rebake",
+        "title": "QuecPi: Rebuild Recipe (rebake)",
+        "category": "QuecPi"
+      },
+      {
+        "command": "quecpi.openBuildDir",
+        "title": "QuecPi: Open Deploy Images Dir",
+        "category": "QuecPi"
+      },
+      {
+        "command": "quecpi.openBitbakeLog",
+        "title": "QuecPi: Open Bitbake Log (pick recipe)",
+        "category": "QuecPi"
+      },
+      {
+        "command": "quecpi.flash",
+        "title": "QuecPi: 烧录到板 (Flash)",
+        "category": "QuecPi"
+      },
+      {
+        "command": "quecpi.adbCmd",
+        "title": "QuecPi: ADB 命令",
+        "category": "QuecPi"
+      },
+      {
+        "command": "quecpi.adbShell",
+        "title": "QuecPi: ADB Shell",
+        "category": "QuecPi"
+      },
+      {
+        "command": "quecpi.adbTerm",
+        "title": "QuecPi: ADB 终端",
+        "category": "QuecPi"
+      },
+      {
+        "command": "quecpi.reboot",
+        "title": "QuecPi: 重启设备",
+        "category": "QuecPi"
+      },
+      {
+        "command": "quecpi.rebootEdl",
+        "title": "QuecPi: 进 EDL 模式",
+        "category": "QuecPi"
+      },
+      {
+        "command": "quecpi.copilot",
+        "title": "QuecPi: 打开 Copilot Chat",
+        "category": "QuecPi"
+      },
+      {
+        "command": "quecpi.atSend",
+        "title": "QuecPi: AT 指令发送",
+        "category": "QuecPi"
+      },
+      {
+        "command": "quecpi.screenshot",
+        "title": "QuecPi: 截图",
+        "category": "QuecPi"
+      },
+      {
+        "command": "quecpi.flashUfs",
+        "title": "QuecPi: 一键烧录 UFS",
+        "category": "QuecPi"
+      },
+      {
+        "command": "quecpi.flashEmmc",
+        "title": "QuecPi: 一键烧录 eMMC",
+        "category": "QuecPi"
+      },
+      {
+        "command": "quecpi.serialMonitor",
+        "title": "QuecPi: Serial Monitor",
+        "category": "QuecPi"
+      },
+      {
+        "command": "quecpi.flashHelp",
+        "title": "QuecPi: Flash / QDL Help",
+        "category": "QuecPi"
+      },
+      {
+        "command": "quecpi.chat",
+        "title": "QuecPi: AI Chat (CodeBuddy)",
+        "category": "QuecPi"
+      },
+      {
+        "command": "quecpi.newPreset",
+        "title": "QuecPi: 创建 Agent 预设 (复制)",
+        "category": "QuecPi"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "quecpi",
+          "title": "QuecPi",
+          "icon": "$(chip)"
+        },
+        {
+          "id": "quecpiSidebar",
+          "title": "QuecPi Panel",
+          "icon": "$(dashboard)"
+        }
+      ]
+    },
+    "views": {
+      "quecpi": [
+        {
+          "id": "quecpiArtifacts",
+          "name": "Build Artifacts",
+          "icon": "$(package)"
+        },
+        {
+          "id": "quecpiBuildTasks",
+          "name": "Quick Build",
+          "icon": "$(tools)"
+        }
+      ],
+      "quecpiSidebar": [
+        {
+          "id": "quecpiSidebarView",
+          "name": "Control Panel",
+          "type": "webview"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "quecpi.panel",
+          "when": "view == quecpiBuildTasks",
+          "group": "navigation"
+        },
+        {
+          "command": "quecpi.buildall",
+          "when": "view == quecpiBuildTasks",
+          "group": "navigation"
+        },
+        {
+          "command": "quecpi.chat",
+          "when": "view == quecpiBuildTasks",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "QuecPi H1 DevKit",
+      "properties": {
+        "quecpi.bspPath": {
+          "type": "string",
+          "default": "/mnt/wsl/PHYSICALDRIVE1p1/QuecPi/QuecPi-QCLinux-BL01",
+          "description": "Absolute path of the QuecPi-QCLinux-BL01 BSP repository."
+        },
+        "quecpi.build.mode": {
+          "type": "string",
+          "enum": [
+            "docker",
+            "local"
+          ],
+          "default": "docker",
+          "description": "docker = run bitbake inside the 'quecpi-build' container; local = run directly in this WSL shell."
+        },
+        "quecpi.build.container": {
+          "type": "string",
+          "default": "quecpi-build",
+          "description": "Docker container name used in docker build mode."
+        },
+        "quecpi.build.projectRev": {
+          "type": "string",
+          "default": "SG565DWFPARL1A02_BL01BP01K0M02V01_QDP_LP6.6.052.01.003V07",
+          "description": "ProjectRev passed to buildconfig."
+        },
+        "quecpi.build.custName": {
+          "type": "string",
+          "default": "STD",
+          "description": "CustName passed to buildconfig (STD / DBG / SEC / STD/SEC ...)."
+        },
+        "quecpi.build.threads": {
+          "type": "number",
+          "default": 12,
+          "description": "BB_NUMBER_THREADS / PARALLEL_MAKE -j value injected into conf/local.conf (12 for 48GB host / 36GB WSL; use 6 for 15GB)."
+        },
+        "quecpi.build.llvmJobs": {
+          "type": "number",
+          "default": 4,
+          "description": "PARALLEL_MAKE -j cap for memory-hungry LLVM/rust recipes (rust-llvm, llvm, glslang, spirv-tools)."
+        },
+        "quecpi.serial.port": {
+          "type": "string",
+          "default": "/dev/ttyUSB0",
+          "description": "Serial device for the QuecPi console."
+        },
+        "quecpi.serial.baud": {
+          "type": "number",
+          "default": 115200,
+          "description": "Baud rate for the serial console."
+        },
+        "quecpi.flash.qdlPath": {
+          "type": "string",
+          "default": "",
+          "description": "QDL 烧录工具路径（如 /home/<user>/qdl）。留空则自动查找 PATH 中的 qdl/qdl.py/qfiledownloader。"
+        },
+        "quecpi.chat.baseUrl": {
+          "type": "string",
+          "default": "https://api.deepseek.com",
+          "description": "OpenAI-compatible chat endpoint base URL."
+        },
+        "quecpi.chat.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "API key for the chat endpoint. Prefer setting QUECPI_API_KEY env var."
+        },
+        "quecpi.chat.model": {
+          "type": "string",
+          "default": "deepseek-v4-pro",
+          "description": "Model name for chat (also selectable from the chat panel's model dropdown)."
+        },
+        "quecpi.chat.models": {
+          "type": "string",
+          "default": "deepseek-v4-pro,deepseek-v4-flash,deepseek-chat,qwen3.7-max,qwen3.7-plus,qwen3-coder-plus,glm-5.2",
+          "description": "Comma-separated model list shown in the chat panel's model dropdown."
+        },
+        "quecpi.harness.url": {
+          "type": "string",
+          "default": "http://127.0.0.1:3080",
+          "description": "运行中的 DeepSeek Harness Web 服务地址（Agent 预设下拉从它的 /api/agentPreset.* 读取）。"
+        },
+        "quecpi.chat.preset": {
+          "type": "string",
+          "default": "code",
+          "description": "默认 Agent 模式（harness 预设 id）：standard=标准模式 / code=PTC 模式 / minimal=极简模式 / cordis=创造模式 / 自定义 id。"
+        },
+        "quecpi.chat.presets": {
+          "type": "string",
+          "default": "",
+          "description": "自定义 Agent 模式（JSON 数组，覆盖内置同 id）：[{\"id\":\"ptc\",\"label\":\"PTC模式\",\"prompt\":\"...\"}]"
+        },
+        "quecpi.chat.systemPrompt": {
+          "type": "string",
+          "default": "You are QuecPi Bot, an embedded Linux / Yocto / Qualcomm BSP expert embedded in VS Code for the QuecPi H1 (QCM6490) board. Answer concisely and cite the file paths you rely on.",
+          "description": "Legacy custom system prompt (only used when no preset matches)."
+        },
+        "quecpi.adb.path": {
+          "type": "string",
+          "default": "adb",
+          "description": "adb binary path. Default 'adb' (PATH). Set to a Windows adb.exe (e.g. /mnt/d/.../platform-tools/adb.exe) to talk to the board via the Windows USB stack."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package --no-dependencies"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "@types/ws": "^8.18.1",
+    "typescript": "^5.4.0"
+  },
+  "dependencies": {
+    "ws": "^8.21.3"
+  }
+}

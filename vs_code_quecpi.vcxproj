@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!--
+    vs_code_quecpi — QuecPi H1 VS Code 插件 Windows 版构建工程
+    使用 Visual Studio 打开本工程 (vs_code_quecpi.sln)，右键项目 → 生成，
+    即可自动执行 npm install → tsc 编译 → vsce 打包，产出 Windows 版 .vsix。
+  -->
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{A917FE95-EF83-482C-B3C8-9E2260CDB3B1}</ProjectGuid>
+    <ProjectName>vs_code_quecpi</ProjectName>
+    <RootNamespace>vs_code_quecpi</RootNamespace>
+    <Keyword>Utility</Keyword>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Configuration Condition="'$(Configuration)' == ''">Release</Configuration>
+    <Platform Condition="'$(Platform)' == ''">x64</Platform>
+    <OutDir>dist\</OutDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="package.json" />
+    <None Include="tsconfig.json" />
+    <None Include="src\**\*.ts" />
+    <None Include="webview\**\*.js" />
+    <None Include="README.md" />
+  </ItemGroup>
+
+  <!-- 生成：npm install → compile → vsce package -->
+  <Target Name="Build" DependsOnTargets="CheckNpm">
+    <Message Text="[QuecPi] npm install ..." Importance="high" />
+    <Exec Command="npm install --no-audit --no-fund" />
+    <Message Text="[QuecPi] tsc compile ..." Importance="high" />
+    <Exec Command="npm run compile" />
+    <Message Text="[QuecPi] vsce package -> dist\vscode-quecpi-win.vsix ..." Importance="high" />
+    <Exec Command="npx @vscode/vsce package --no-dependencies -o dist\vscode-quecpi-win.vsix" />
+    <Message Text="[QuecPi] ✅ Windows 版打包完成: dist\vscode-quecpi-win.vsix" Importance="high" />
+  </Target>
+
+  <!-- 清理 -->
+  <Target Name="Clean">
+    <Exec Command="rmdir /s /q out" IgnoreExitCode="true" />
+    <Exec Command="rmdir /s /q dist" IgnoreExitCode="true" />
+  </Target>
+
+  <!-- 检查 node/npm -->
+  <Target Name="CheckNpm">
+    <Exec Command="node --version" IgnoreExitCode="true" />
+    <Error Condition="'$(nodeVersion)' == ''" Text="未检测到 Node.js —— 请先安装 Node.js 18+ 并加入 PATH" />
+  </Target>
+</Project>
