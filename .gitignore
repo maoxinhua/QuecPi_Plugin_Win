@@ -4,3 +4,7 @@ out/
 *.tar.gz
 dist/
 .vscode/
+.vs/
+bin/
+obj/
+app.config
