@@ -17,7 +17,7 @@ export async function openSerialMonitor(): Promise<void> {
       ['COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8'].map((c) => ({ label: c })),
       { placeHolder: 'Select the board COM port (e.g. COM5 for UART)' }
     );
-    const portName = com ? com.label : port.replace(/\/dev\/ttyUSB\d+/, 'COM5');
+    const portName = com ? com.label : 'COM5';
     const term = getSharedTerminal('QuecPi Serial');
     term.show();
     const ps = `

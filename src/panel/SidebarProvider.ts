@@ -7,7 +7,7 @@ import { PanelController } from './panelCore';
  * Reuses the shared PanelController (same UI as the editor panel).
  */
 export class SidebarProvider implements vscode.WebviewViewProvider {
-  public static readonly viewType = 'quecpiSidebar';
+  public static readonly viewType = 'quecpiPanel';
   private controller: PanelController | undefined;
 
   constructor(private readonly extensionUri: vscode.Uri) {}

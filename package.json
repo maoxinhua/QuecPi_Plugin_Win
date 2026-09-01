@@ -34,32 +34,32 @@
       },
       {
         "command": "quecpi.buildall",
-        "title": "QuecPi: Build All (buildall)",
+        "title": "QuecPi: Build All (incremental)",
         "category": "QuecPi"
       },
       {
         "command": "quecpi.buildClean",
-        "title": "QuecPi: Clean Build (从头重建)",
+        "title": "QuecPi: Clean Build (full rebuild)",
         "category": "QuecPi"
       },
       {
         "command": "quecpi.buildkernel",
-        "title": "QuecPi: Build Kernel (buildkernel)",
+        "title": "QuecPi: Build Kernel",
         "category": "QuecPi"
       },
       {
         "command": "quecpi.builddtb",
-        "title": "QuecPi: Build DTB (builddtb)",
+        "title": "QuecPi: Build DTB",
         "category": "QuecPi"
       },
       {
         "command": "quecpi.buildpackage",
-        "title": "QuecPi: Package Images (buildpackage)",
+        "title": "QuecPi: Package Images",
         "category": "QuecPi"
       },
       {
         "command": "quecpi.rebake",
-        "title": "QuecPi: Rebuild Recipe (rebake)",
+        "title": "QuecPi: Rebuild Recipe",
         "category": "QuecPi"
       },
       {
@@ -69,17 +69,17 @@
       },
       {
         "command": "quecpi.openBitbakeLog",
-        "title": "QuecPi: Open Bitbake Log (pick recipe)",
+        "title": "QuecPi: Open Bitbake Log",
         "category": "QuecPi"
       },
       {
         "command": "quecpi.flash",
-        "title": "QuecPi: 烧录到板 (Flash)",
+        "title": "QuecPi: Flash to Board (QDL)",
         "category": "QuecPi"
       },
       {
         "command": "quecpi.adbCmd",
-        "title": "QuecPi: ADB 命令",
+        "title": "QuecPi: ADB Command",
         "category": "QuecPi"
       },
       {
@@ -89,42 +89,42 @@
       },
       {
         "command": "quecpi.adbTerm",
-        "title": "QuecPi: ADB 终端",
+        "title": "QuecPi: ADB Terminal",
         "category": "QuecPi"
       },
       {
         "command": "quecpi.reboot",
-        "title": "QuecPi: 重启设备",
+        "title": "QuecPi: Reboot Device",
         "category": "QuecPi"
       },
       {
         "command": "quecpi.rebootEdl",
-        "title": "QuecPi: 进 EDL 模式",
+        "title": "QuecPi: Enter EDL Mode",
         "category": "QuecPi"
       },
       {
         "command": "quecpi.copilot",
-        "title": "QuecPi: 打开 Copilot Chat",
+        "title": "QuecPi: Open Copilot Chat",
         "category": "QuecPi"
       },
       {
         "command": "quecpi.atSend",
-        "title": "QuecPi: AT 指令发送",
+        "title": "QuecPi: Send AT Command",
         "category": "QuecPi"
       },
       {
         "command": "quecpi.screenshot",
-        "title": "QuecPi: 截图",
+        "title": "QuecPi: Screenshot",
         "category": "QuecPi"
       },
       {
         "command": "quecpi.flashUfs",
-        "title": "QuecPi: 一键烧录 UFS",
+        "title": "QuecPi: Flash UFS",
         "category": "QuecPi"
       },
       {
         "command": "quecpi.flashEmmc",
-        "title": "QuecPi: 一键烧录 eMMC",
+        "title": "QuecPi: Flash eMMC",
         "category": "QuecPi"
       },
       {
@@ -134,17 +134,52 @@
       },
       {
         "command": "quecpi.flashHelp",
-        "title": "QuecPi: Flash / QDL Help",
+        "title": "QuecPi: Flash Help",
         "category": "QuecPi"
       },
       {
         "command": "quecpi.chat",
-        "title": "QuecPi: AI Chat (CodeBuddy)",
+        "title": "QuecPi: AI Chat",
         "category": "QuecPi"
       },
       {
         "command": "quecpi.newPreset",
-        "title": "QuecPi: 创建 Agent 预设 (复制)",
+        "title": "QuecPi: Create Agent Preset (copy)",
+        "category": "QuecPi"
+      },
+      {
+        "command": "quecpi.manageToolchains",
+        "title": "QuecPi: Manage Toolchains",
+        "category": "QuecPi"
+      },
+      {
+        "command": "quecpi.manageSdks",
+        "title": "QuecPi: Manage SDKs",
+        "category": "QuecPi"
+      },
+      {
+        "command": "quecpi.openApp",
+        "title": "QuecPi: Open an existing application",
+        "category": "QuecPi"
+      },
+      {
+        "command": "quecpi.newApp",
+        "title": "QuecPi: Create a new application",
+        "category": "QuecPi"
+      },
+      {
+        "command": "quecpi.newBoard",
+        "title": "QuecPi: Create a new board",
+        "category": "QuecPi"
+      },
+      {
+        "command": "quecpi.browseSamples",
+        "title": "QuecPi: Browse Samples",
+        "category": "QuecPi"
+      },
+      {
+        "command": "quecpi.openTerminal",
+        "title": "QuecPi: Open terminal",
         "category": "QuecPi"
       }
     ],
@@ -154,32 +189,25 @@
           "id": "quecpi",
           "title": "QuecPi",
           "icon": "$(chip)"
-        },
-        {
-          "id": "quecpiSidebar",
-          "title": "QuecPi Panel",
-          "icon": "$(dashboard)"
         }
       ]
     },
     "views": {
       "quecpi": [
         {
+          "id": "quecpiPanel",
+          "name": "QuecPi H1 Panel",
+          "type": "webview"
+        },
+        {
           "id": "quecpiArtifacts",
           "name": "Build Artifacts",
           "icon": "$(package)"
         },
         {
-          "id": "quecpiBuildTasks",
-          "name": "Quick Build",
-          "icon": "$(tools)"
-        }
-      ],
-      "quecpiSidebar": [
-        {
-          "id": "quecpiSidebarView",
-          "name": "Control Panel",
-          "type": "webview"
+          "id": "quecpiManageResources",
+          "name": "Manage Resources",
+          "icon": "$(home)"
         }
       ]
     },
@@ -187,17 +215,17 @@
       "view/title": [
         {
           "command": "quecpi.panel",
-          "when": "view == quecpiBuildTasks",
+          "when": "view == quecpiManageResources",
           "group": "navigation"
         },
         {
           "command": "quecpi.buildall",
-          "when": "view == quecpiBuildTasks",
+          "when": "view == quecpiArtifacts",
           "group": "navigation"
         },
         {
           "command": "quecpi.chat",
-          "when": "view == quecpiBuildTasks",
+          "when": "view == quecpiArtifacts",
           "group": "navigation"
         }
       ]
@@ -226,13 +254,13 @@
         },
         "quecpi.build.projectRev": {
           "type": "string",
-          "default": "SG565DWFPARL1A02_BL01BP01K0M02V01_QDP_LP6.6.052.01.003V07",
+          "default": "QSM565DWFPARL1A01_BP01.001_Linux6.6.38_V01",
           "description": "ProjectRev passed to buildconfig."
         },
         "quecpi.build.custName": {
           "type": "string",
-          "default": "STD",
-          "description": "CustName passed to buildconfig (STD / DBG / SEC / STD/SEC ...)."
+          "default": "DEBIAN",
+          "description": "Custom token: STD/DBG/SEC/WESTON/UBUNTU/DEBIAN (DEBIAN = prebuilt Debian GNOME rootfs)"
         },
         "quecpi.build.threads": {
           "type": "number",
@@ -303,6 +331,11 @@
           "type": "string",
           "default": "adb",
           "description": "adb binary path. Default 'adb' (PATH). Set to a Windows adb.exe (e.g. /mnt/d/.../platform-tools/adb.exe) to talk to the board via the Windows USB stack."
+        },
+        "quecpi.build.debugBuild": {
+          "type": "boolean",
+          "default": true,
+          "description": "DEBUG build (DEBUG_BUILD=1). The H1 board runs a -debug kernel, so this is on by default."
         }
       }
     }

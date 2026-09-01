@@ -43,8 +43,18 @@ export async function runBspShell(
     const proc = spawn(cmd, args, { cwd: opts.cwd ?? bsp });
     // cancellation support (Uniknect-style withProgress + token)
     const cancelSub = opts.token?.onCancellationRequested(() => {
-      channel.appendLine('\n[quecpi] cancelled by user — killing process tree...');
+      channel.appendLine('\n[quecpi] cancelled by user — killing build...');
       try { proc.kill('SIGKILL'); } catch { /* ignore */ }
+      // Kill the actual bitbake too: killing the docker exec client above
+      // leaves the bitbake-server orphaned and still running inside the
+      // container (or on the host in local mode).
+      const killArgs = mode === 'docker'
+        ? ['exec', Cfg.container(), 'pkill', '-9', '-f', 'bitbake']
+        : [];
+      const killer = mode === 'docker'
+        ? spawn('docker', killArgs)
+        : spawn('pkill', ['-9', '-f', 'bitbake']);
+      killer.on('error', () => { /* ignore */ });
     });
     let output = '';
     const onData = (d: Buffer) => {
@@ -93,12 +103,17 @@ const threadConf =
   ` && printf 'PARALLEL_MAKE:pn-rust-llvm-native = "-j %d"\\nPARALLEL_MAKE:pn-llvm-native = "-j %d"\\nPARALLEL_MAKE:pn-llvm = "-j %d"\\nPARALLEL_MAKE:pn-glslang = "-j %d"\\nPARALLEL_MAKE:pn-spirv-tools = "-j %d"\\n' ${Cfg.llvmJobs()} ${Cfg.llvmJobs()} ${Cfg.llvmJobs()} ${Cfg.llvmJobs()} ${Cfg.llvmJobs()} >> /work/build-qcom-wayland/conf/local.conf`;
 
 export function buildconfigSnippet(): string {
-  const rev = Cfg.projectRev() || 'SG565DWFPARL1A02_BL01BP01K0M02V01_QDP_LP6.6.052.01.003V07';
-  return `${envSetup} && buildconfig ${Cfg.projectName()} ${rev} ${Cfg.custName()}`;
+  const rev = Cfg.projectRev() || 'QSM565DWFPARL1A01_BP01.001_Linux6.6.38_V01';
+  const debug = Cfg.debugBuild() ? ' DEBUG' : '';
+  return `${envSetup} && buildconfig ${Cfg.projectName()} ${rev} ${Cfg.custName()}${debug}`;
 }
 
 export function buildallSnippet(): string {
-  return `${envSetup} && ${threadConf} && buildall`;
+  // INCREMENTAL build: reuse sstate, only rebuild changed parts.
+  // NOTE: the SDK's buildall() does `bitbake -c cleanall` first, which forces
+  // a full image rebuild every time — so we call bitbake directly here.
+  // A full rebuild happens only via Clean Build (cleanBuildSnippet).
+  return `${envSetup} && ${threadConf} && bitbake $TARGET_IMAGE`;
 }
 
 /**

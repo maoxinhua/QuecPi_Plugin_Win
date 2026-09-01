@@ -12,24 +12,25 @@ import {
   cleanBuildSnippet,
   BuildStatusBar,
 } from './build';
-import { ArtifactsProvider, BuildTasksProvider, pickBitbakeLog } from './artifacts';
+import { ArtifactsProvider, pickBitbakeLog } from './artifacts';
 import { openSerialMonitor, showFlashHelp } from './serial';
 import { runFlash } from './flash';
 import { adbCmd, adbShell, adbTerm, rebootDevice, atSend, screenshot, flashStorage } from './device';
 import { ChatPanel } from './chat/ChatPanel';
 import { ControlPanel } from './panel/ControlPanel';
 import { SidebarProvider } from './panel/SidebarProvider';
+import { ManageResourcesProvider, registerManageCommands } from './manage';
 import { listAgentPresets, copyAgentPreset } from './chat/harness';
 
 export function activate(context: vscode.ExtensionContext) {
   const channel = vscode.window.createOutputChannel('QuecPi Build');
   const statusBar = new BuildStatusBar();
   const artifacts = new ArtifactsProvider();
-  const tasks = new BuildTasksProvider();
 
   context.subscriptions.push(
     vscode.window.registerTreeDataProvider('quecpiArtifacts', artifacts),
-    vscode.window.registerTreeDataProvider('quecpiBuildTasks', tasks),
+    vscode.window.registerTreeDataProvider('quecpiManageResources', new ManageResourcesProvider()),
+    ...registerManageCommands(),
     vscode.window.registerWebviewViewProvider(SidebarProvider.viewType, new SidebarProvider(context.extensionUri)),
     vscode.commands.registerCommand('quecpi.panel', () => ControlPanel.create(context.extensionUri)),
     vscode.commands.registerCommand('quecpi.panelPopout', () => ControlPanel.popout(context.extensionUri)),
