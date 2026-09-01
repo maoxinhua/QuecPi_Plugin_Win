@@ -1,22 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <!--
-    vs_code_quecpi — QuecPi H1 VS Code 插件 Windows 版构建工程
+    vs_code_quecpi — QuecPi H1 VS Code 插件 Windows 版构建工程 (C# 项目壳)
     用 Visual Studio 打开 vs_code_quecpi.sln → 右键项目 → 生成，
-    自动执行 npm install → tsc 编译 → vsce 打包，产出 dist\vscode-quecpi-win.vsix。
-    前提: Windows 已安装 Node.js 18+ 且 node/npm 在 PATH 中。
+    执行 npm install → tsc 编译 → vsce 打包，产出 dist\vscode-quecpi-win.vsix。
   -->
-  <PropertyGroup Label="Globals">
-    <ProjectGuid>{A917FE95-EF83-482C-B3C8-9E2260CDB3B1}</ProjectGuid>
-    <ProjectName>vs_code_quecpi</ProjectName>
-    <RootNamespace>vs_code_quecpi</RootNamespace>
-    <Keyword>Utility</Keyword>
-  </PropertyGroup>
-
   <PropertyGroup>
     <Configuration Condition="'$(Configuration)' == ''">Release</Configuration>
-    <Platform Condition="'$(Platform)' == ''">x64</Platform>
-    <OutDir>dist\</OutDir>
+    <Platform Condition="'$(Platform)' == ''">AnyCPU</Platform>
+    <ProjectGuid>{A917FE95-EF83-482C-B3C8-9E2260CDB3B1}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>vs_code_quecpi</RootNamespace>
+    <AssemblyName>vs_code_quecpi</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Debug\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+    <OutputPath>bin\Release\</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -38,7 +43,7 @@
 
     <MakeDir Directories="dist" />
     <Message Text="[QuecPi] vsce package -&gt; dist\vscode-quecpi-win.vsix ..." Importance="high" />
-    <Exec Command="npx @vscode/vsce package --no-dependencies -o dist\vscode-quecpi-win.vsix" />
+    <Exec Command="npx @vscode/vsce package --no-dependencies --allow-missing-repository -o dist\vscode-quecpi-win.vsix" />
 
     <Message Text="[QuecPi] DONE: dist\vscode-quecpi-win.vsix" Importance="high" />
   </Target>
@@ -48,4 +53,7 @@
     <Exec Command="rmdir /s /q out" IgnoreExitCode="true" />
     <Exec Command="rmdir /s /q dist" IgnoreExitCode="true" />
   </Target>
+
+  <!-- 重编译前后空目标，避免 C# 默认编译链干预 -->
+  <Target Name="CoreCompile" />
 </Project>
