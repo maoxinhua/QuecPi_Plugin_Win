@@ -79,12 +79,15 @@ export async function runFlash(channel: vscode.OutputChannel, storage?: 'ufs' | 
     ...patches.map((f) => path.join(pkg, f)),
   ];
   channel.appendLine(`\n$ ${qdl} ${args.join(' ')}\n`);
-  // qdl needs libusb; a local copy may sit next to it in <qdl dir>/lib
-  const qdlDir = path.dirname(qdl);
-  const env = {
-    ...process.env,
-    LD_LIBRARY_PATH: `${path.join(qdlDir, 'lib')}${process.env.LD_LIBRARY_PATH ? ':' + process.env.LD_LIBRARY_PATH : ''}`,
-  };
+  // On Linux, qdl needs libusb; a local copy may sit in <qdl dir>/lib.
+  // On Windows, QDL.exe has libusb-1.0.dll in the same dir (no LD_LIBRARY_PATH).
+  const { isWindows } = require('./config');
+  const env = isWindows
+    ? { ...process.env }
+    : {
+        ...process.env,
+        LD_LIBRARY_PATH: `${path.join(path.dirname(qdl), 'lib')}${process.env.LD_LIBRARY_PATH ? ':' + process.env.LD_LIBRARY_PATH : ''}`,
+      };
   await runHost(qdl, args, channel, env);
   channel.appendLine('\n[烧录完成] 若最后显示 SUCCESS / FINISHED 即为成功，可断电重启板子。');
 }
