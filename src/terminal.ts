@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { execFileSync } from 'child_process';
+import * as os from 'os';
 import { Cfg, isWindows } from './config';
 
 /**
@@ -10,11 +11,14 @@ import { Cfg, isWindows } from './config';
  */
 
 /** Reuse a terminal by name if alive, else create one.
- *  NEVER set cwd: the BSP path may be a WSL UNC or Linux path that Windows
- *  terminals can't open. Let VS Code use the default working directory. */
+ *  On Windows, explicitly set cwd to the user home dir — otherwise VS Code
+ *  defaults to the workspace root (a WSL UNC path it converts to an invalid
+ *  Linux-style /mnt/wsl/... that Windows terminals can't open). */
 export function getSharedTerminal(name: string): vscode.Terminal {
   const existing = vscode.window.terminals.find((t) => t.name === name && t.exitStatus === undefined);
-  return existing || vscode.window.createTerminal({ name });
+  if (existing) return existing;
+  const cwd = isWindows ? os.homedir() : Cfg.bspPath() || undefined;
+  return vscode.window.createTerminal({ name, cwd });
 }
 
 /**
