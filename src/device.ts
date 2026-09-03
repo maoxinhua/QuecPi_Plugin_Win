@@ -34,7 +34,7 @@ export async function adbCmd(channel: vscode.OutputChannel, subCmd: string): Pro
 /** Open an interactive `adb shell` in a shared terminal. */
 export async function adbShell(): Promise<void> {
   if (!(await ensureTool(Cfg.adbPath(), 'adb', 'sudo apt-get install -y adb'))) return;
-  const term = getSharedTerminal('QuecPi ADB');
+  const term = vscode.window.createTerminal({ name: 'QuecPi ADB' });
   term.show();
   term.sendText(`${Cfg.adbPath()} shell`);
 }
@@ -42,7 +42,7 @@ export async function adbShell(): Promise<void> {
 /** Open a shared terminal running `adb shell <cmd>` (follow/interactive). */
 export async function adbTerm(cmd: string): Promise<void> {
   if (!(await ensureTool(Cfg.adbPath(), 'adb', 'sudo apt-get install -y adb'))) return;
-  const term = getSharedTerminal('QuecPi ADB');
+  const term = vscode.window.createTerminal({ name: 'QuecPi ADB' });
   term.show();
   term.sendText(`${Cfg.adbPath()} shell ${cmd}`);
 }
@@ -54,7 +54,7 @@ export async function rebootDevice(edl = false): Promise<void> {
   const confirm = await vscode.window.showWarningMessage(`Confirm ${action}?`, { modal: true }, 'Confirm');
   if (confirm !== 'Confirm') return;
   const cmd = edl ? 'reboot edl' : 'reboot';
-  const term = getSharedTerminal('QuecPi ADB');
+  const term = vscode.window.createTerminal({ name: 'QuecPi ADB' });
   term.show();
   term.sendText(`${Cfg.adbPath()} shell ${cmd}`);
 }
@@ -70,7 +70,7 @@ export async function atSend(channel: vscode.OutputChannel, preFill?: string): P
   const port = Cfg.serialPort();
   channel.show(true);
   channel.appendLine(`\n[AT send] ${cmd} -> ${port}\n`);
-  const term = getSharedTerminal('QuecPi AT');
+  const term = vscode.window.createTerminal({ name: 'QuecPi AT' });
   term.show();
   term.sendText(`echo -n '${cmd}\r' > ${port} && timeout 2 cat ${port}`);
 }
