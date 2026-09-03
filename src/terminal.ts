@@ -9,14 +9,13 @@ import { Cfg, isWindows } from './config';
  *  - wslToWinPath: map a WSL/Linux path to a Windows-accessible path
  */
 
-/** Reuse a terminal by name if alive, else create one (no WSL cwd on Windows). */
+/** Reuse a terminal by name if alive, else create one.
+ *  Never set cwd: the BSP path may be a WSL UNC / Linux path that Windows
+ *  terminals can't open. Let VS Code use the default working directory. */
 export function getSharedTerminal(name: string): vscode.Terminal {
   const existing = vscode.window.terminals.find((t) => t.name === name && t.exitStatus === undefined);
   if (existing) return existing;
-  // On Windows the BSP lives on a WSL UNC path which terminals can't cd into;
-  // leave cwd undefined so the terminal opens in the default home/user dir.
-  const cwd = isWindows ? undefined : Cfg.bspPath() || undefined;
-  return vscode.window.createTerminal({ name, cwd });
+  return vscode.window.createTerminal({ name });
 }
 
 /**
