@@ -1,41 +1,29 @@
 import * as vscode from 'vscode';
-import { execFileSync } from 'child_process';
-import { Cfg, isWindows } from './config';
+import { runQuiet } from './build';
+import { Cfg } from './config';
 
 /**
- * Shared utilities:
- *  - getSharedTerminal: reuse a live terminal by name
- *  - ensureTool: check a CLI exists, offer install guidance (platform-aware)
- *  - wslToWinPath: map a WSL/Linux path to a Windows-accessible path
+ * Shared utilities borrowed from the Uniknect pattern:
+ *  - getSharedTerminal: reuse a live terminal by name instead of spawning new ones
+ *  - ensureTool: check a host CLI exists, offer one-click install guidance
  */
 
-/** Reuse a terminal by name if alive, else create one.
- *  Never set cwd: the BSP path may be a WSL UNC / Linux path that Windows
- *  terminals can't open. Let VS Code use the default working directory. */
+/** Reuse a terminal by name if it is still alive, else create one. */
 export function getSharedTerminal(name: string): vscode.Terminal {
   const existing = vscode.window.terminals.find((t) => t.name === name && t.exitStatus === undefined);
-  if (existing) return existing;
-  return vscode.window.createTerminal({ name });
+  return existing || vscode.window.createTerminal({ name, cwd: Cfg.bspPath() || undefined });
 }
 
 /**
- * Ensure a CLI tool exists. On Windows uses `where`, on Linux uses `which`.
- * Install guidance is platform-specific.
+ * Ensure a CLI tool exists on the host. Returns true if available; otherwise
+ * shows guidance and (when installCmd is given) offers one-click install.
  */
 export async function ensureTool(tool: string, label: string, installCmd?: string): Promise<boolean> {
-  try {
-    if (isWindows) {
-      execFileSync('where', [tool], { stdio: 'ignore', shell: true });
-    } else {
-      execFileSync('which', [tool], { stdio: 'ignore' });
-    }
-    return true;
-  } catch {
-    // not found
-  }
+  const which = await runQuiet('bash', ['-lc', `command -v ${tool}`]);
+  if (which.trim()) return true;
   if (installCmd) {
     const go = await vscode.window.showWarningMessage(
-      `"${label}" (${tool}) not found. Install it?`,
+      `"${label}" (${tool}) not found on the host. Install it?`,
       'Install',
       'Cancel'
     );
@@ -45,26 +33,7 @@ export async function ensureTool(tool: string, label: string, installCmd?: strin
       term.sendText(installCmd);
     }
   } else {
-    void vscode.window.showWarningMessage(`"${label}" (${tool}) not found.`);
+    vscode.window.showWarningMessage(`"${label}" (${tool}) not found on the host.`);
   }
   return false;
-}
-
-/**
- * Map a WSL/Linux path to a Windows-accessible path.
- * e.g. /mnt/wsl/PHYSICALDRIVE1p1/QuecPi/... → \\wsl.localhost\Ubuntu-24.04\mnt\wsl\...
- *      /mnt/c/Users/... → C:\Users\...
- * On non-Windows, returns the path unchanged.
- */
-export function wslToWinPath(linuxPath: string): string {
-  if (!isWindows) return linuxPath;
-  if (!linuxPath) return linuxPath;
-  // /mnt/c/Foo → C:\Foo
-  const m = linuxPath.match(/^\/mnt\/([a-zA-Z])\/(.*)$/);
-  if (m) {
-    return `${m[1].toUpperCase()}:\\${m[2].replace(/\//g, '\\')}`;
-  }
-  // other WSL paths → \\wsl.localhost\<distro>\<path>
-  const distro = process.env.WSL_DISTRO_NAME || 'Ubuntu-24.04';
-  return `\\\\wsl.localhost\\${distro}\\${linuxPath.replace(/^\//, '').replace(/\//g, '\\')}`;
 }

@@ -128,10 +128,10 @@ export function activate(context: vscode.ExtensionContext) {
   );
 }
 
-/** Windows 版不支持固件构建（docker 不可用）——拦截 build 类命令。 */
+/** Windows 版不支持固件构建——拦截 build 类命令。 */
 function winGuard(p: Promise<any>, what: string): Promise<any> {
   if (isWindows) {
-    vscode.window.showWarningMessage(`Windows 版不支持「${what}」——固件构建请在 WSL/Linux 环境进行（本版保留调试/烧录/日志功能）。`);
+    void vscode.window.showWarningMessage(`Windows 版不支持「${what}」——固件构建请在 WSL/Linux 环境进行。`);
     return Promise.resolve();
   }
   return p;

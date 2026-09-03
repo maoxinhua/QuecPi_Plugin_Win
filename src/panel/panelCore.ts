@@ -130,7 +130,7 @@ h1 .logo{color:var(--vscode-textLink-foreground);}
   <div class="region-b"><div class="region-b-inner"><div class="region-tiles">
     <div class="tile" data-cmd="quecpi.buildconfig" title="${t('bld.configure.tip')}"><div class="ic codicon codicon-gear"></div><div class="lb">${t('bld.configure')}</div></div>
     <div class="tile" data-cmd="quecpi.buildall" title="${t('bld.buildall.tip')}"><div class="ic codicon codicon-rocket"></div><div class="lb">${t('bld.buildall')}</div></div>
-    <div class="tile${isWindows ? ' soon' : ''} warn" data-cmd="quecpi.buildClean" title="${t('bld.clean.tip')}"><div class="ic codicon codicon-clear-all"></div><div class="lb">${t('bld.clean')}</div></div>
+    <div class="tile warn" data-cmd="quecpi.buildClean" title="${t('bld.clean.tip')}"><div class="ic codicon codicon-clear-all"></div><div class="lb">${t('bld.clean')}</div></div>
     <div class="tile" data-cmd="quecpi.buildkernel" title="${t('bld.kernel.tip')}"><div class="ic codicon codicon-brick"></div><div class="lb">${t('bld.kernel')}</div></div>
     <div class="tile" data-cmd="quecpi.builddtb" title="${t('bld.dtb.tip')}"><div class="ic codicon codicon-type-hierarchy-sub"></div><div class="lb">${t('bld.dtb')}</div></div>
   </div></div></div>
