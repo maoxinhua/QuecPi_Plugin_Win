@@ -37,7 +37,7 @@ export async function runFlash(channel: vscode.OutputChannel, storage?: 'ufs' | 
     firehose = flashDir + '\\prog_firehose_Qcm6490_ddr.elf';
     channel.appendLine('[debug] copying package to D:\\quecpi-flash...');
     try {
-      execSync('wsl bash -c "rm -rf /mnt/d/quecpi-flash && mkdir -p /mnt/d/quecpi-flash && cp ' + pkgLinux + '/* /mnt/d/quecpi-flash/"', { timeout: 120000, stdio: 'pipe' });
+      execSync('wsl bash -c "rm -rf /mnt/d/quecpi-flash && mkdir -p /mnt/d/quecpi-flash && cp -r ' + pkgLinux + '/* /mnt/d/quecpi-flash/"', { timeout: 120000, stdio: 'pipe' });
       channel.appendLine('[debug] copy done');
     } catch (e: any) {
       channel.appendLine('[debug] copy failed: ' + (e.message || e));
@@ -89,13 +89,13 @@ export async function runFlash(channel: vscode.OutputChannel, storage?: 'ufs' | 
     channel.appendLine('   ⚠ adb 发送失败，请手动按板子 EMG_DOWNLOAD 按键进 EDL');
   }
 
-  // 5. wait for EDL device (user may need to press reset button)
-  channel.appendLine('\n[2/3] 等待 EDL 设备出现（最多 30 秒）...');
+  // 5. wait for EDL device (board reboots after adb reboot edl)
+  channel.appendLine('\n[2/3] 等待 EDL 设备出现（最多 60 秒）...');
   channel.appendLine('   板子进入 EDL 后 USB 设备变为 05c6:9008。');
-  channel.appendLine('   如需按 Reset 键，请在 30 秒内操作。');
+  channel.appendLine('   如需手动按 EMG_DOWNLOAD 按键，请在 60 秒内操作。');
 
   let edlFound = false;
-  for (let i = 0; i < 15; i++) {
+  for (let i = 0; i < 30; i++) {
     await sleep(2000);
     const edl = await detectEdl();
     if (edl) {
@@ -108,7 +108,7 @@ export async function runFlash(channel: vscode.OutputChannel, storage?: 'ufs' | 
     }
   }
   if (!edlFound) {
-    channel.appendLine('   ⚠ 30 秒内未检测到 EDL 设备，QDL 将继续等待...');
+    channel.appendLine('   ⚠ 60 秒内未检测到 EDL 设备，QDL 将继续等待...');
   }
 
   // 6. run QDL
@@ -126,7 +126,7 @@ export async function runFlash(channel: vscode.OutputChannel, storage?: 'ufs' | 
     : { ...process.env, LD_LIBRARY_PATH: `${path.join(path.dirname(qdl), 'lib')}${process.env.LD_LIBRARY_PATH ? ':' + process.env.LD_LIBRARY_PATH : ''}` };
 
   await runHost(qdl, args, channel, env);
-  channel.appendLine('\n[烧录完成] 若最后显示 SUCCESS / FINISHED 即为成功，可断电重启板子。');
+  channel.appendLine('\n[烧录完成] 若最后显示 "partition 1 is now bootable" 即为成功，板子将自动重启。');
 }
 
 /** Detect EDL device (05c6:9008/900e). Platform-aware. */
