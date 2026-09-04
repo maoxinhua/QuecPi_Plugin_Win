@@ -83,10 +83,10 @@ export async function runFlash(channel: vscode.OutputChannel, storage?: 'ufs' | 
   const adb = Cfg.adbPath();
   channel.appendLine('\n[1/3] 进入 EDL: ' + adb + ' reboot edl');
   try {
-    execSync('"' + adb + '" reboot edl', { timeout: 10000 });
-    channel.appendLine('   adb reboot edl 已发送');
+    spawn(adb, ['shell', 'reboot', 'edl'], { detached: true, stdio: 'ignore' }).unref();
+    channel.appendLine('   adb reboot edl 已发送（板子将重启进 EDL）');
   } catch {
-    channel.appendLine('   ⚠ adb reboot edl 失败（板子可能已离线，或已通过硬件方式进 EDL）');
+    channel.appendLine('   ⚠ adb 发送失败，请手动按板子 EMG_DOWNLOAD 按键进 EDL');
   }
 
   // 5. wait for EDL device (user may need to press reset button)
