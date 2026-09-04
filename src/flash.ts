@@ -3,11 +3,14 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { spawn, execSync } from 'child_process';
 import { Cfg, isWindows } from './config';
-import { wslToWinPath } from './terminal';
 
 /**
  * Flash runner: one-click EDL flash — adb reboot edl → wait → QDL burn.
  * Platform-aware (Windows QDL.exe / Linux qdl).
+ *
+ * On Windows: the BSP lives on a WSL filesystem that Windows fs can't access.
+ * Solution: copy the flash package to D:\quecpi-flash via `wsl bash -c "cp ..."`
+ * before running QDL.exe.
  */
 
 export async function runFlash(channel: vscode.OutputChannel, storage?: 'ufs' | 'emmc'): Promise<void> {
@@ -16,36 +19,58 @@ export async function runFlash(channel: vscode.OutputChannel, storage?: 'ufs' | 
   channel.appendLine(`🔥 QuecPi 烧录 (QDL / firehose)${storage ? ` — storage: ${storage.toUpperCase()}` : ''}`);
   channel.appendLine('='.repeat(60));
 
-  // 1. flash package path — convert to Windows-accessible if needed
+  // 1. flash package path — use forward slashes for Linux fs access
   const rev = Cfg.projectRev() || 'QSM565DWFPARL1A01_BP01.001_Linux6.6.38_V01';
-  const pkgRaw = path.join(Cfg.bspPath(), 'quectel_build', rev);
-  const pkg = isWindows ? wslToWinPath(pkgRaw) : pkgRaw;
-  const firehose = path.join(pkg, 'prog_firehose_Qcm6490_ddr.elf');
+  const bsp = Cfg.bspPath();
+  const pkgLinux = bsp.replace(/\\/g, '/') + '/quectel_build/' + rev;
+  const firehoseLinux = pkgLinux + '/prog_firehose_Qcm6490_ddr.elf';
+  channel.appendLine('[debug] bspPath=' + bsp);
+  channel.appendLine('[debug] isWindows=' + isWindows);
+  channel.appendLine('[debug] pkgLinux=' + pkgLinux);
+
+  // On Windows: copy flash package to D: drive (Windows-accessible)
+  let pkg = pkgLinux;
+  let firehose = firehoseLinux;
+  if (isWindows && pkgLinux.indexOf('/mnt/') === 0) {
+    const flashDir = 'D:\\quecpi-flash';
+    pkg = flashDir;
+    firehose = flashDir + '\\prog_firehose_Qcm6490_ddr.elf';
+    channel.appendLine('[debug] copying package to D:\\quecpi-flash...');
+    try {
+      execSync('wsl bash -c "rm -rf /mnt/d/quecpi-flash && mkdir -p /mnt/d/quecpi-flash && cp ' + pkgLinux + '/* /mnt/d/quecpi-flash/"', { timeout: 120000, stdio: 'pipe' });
+      channel.appendLine('[debug] copy done');
+    } catch (e: any) {
+      channel.appendLine('[debug] copy failed: ' + (e.message || e));
+    }
+  }
 
   if (!fs.existsSync(firehose)) {
-    channel.appendLine(`❌ 烧录包未找到: ${pkg}`);
+    channel.appendLine('❌ 烧录包未找到: ' + firehose);
+    channel.appendLine('   pkgLinux=' + pkgLinux);
     channel.appendLine('   请先运行 buildpackage，或确认 quecpi.build.projectRev 设置。');
     return;
   }
   const raws = fs.readdirSync(pkg).filter((f) => /^rawprogram\d*\.xml$/.test(f)).sort();
   const patches = fs.readdirSync(pkg).filter((f) => /^patch\d*\.xml$/.test(f)).sort();
-  channel.appendLine(`✅ 烧录包: ${rev}`);
-  channel.appendLine(`   firehose: ${path.basename(firehose)}`);
-  channel.appendLine(`   rawprogram: ${raws.join(', ') || '(无)'}`);
-  channel.appendLine(`   patch: ${patches.join(', ') || '(无)'}`);
+  channel.appendLine('✅ 烧录包: ' + rev);
+  channel.appendLine('   firehose: ' + firehose);
+  channel.appendLine('   rawprogram: ' + (raws.join(', ') || '(无)'));
+  channel.appendLine('   patch: ' + (patches.join(', ') || '(无)'));
 
   // 2. find QDL tool
+  channel.appendLine('[debug] calling findQdl...');
   const qdl = await findQdl();
+  channel.appendLine('[debug] findQdl result=' + qdl);
   if (!qdl) {
     channel.appendLine('❌ 未找到 QDL 烧录工具');
     channel.appendLine('   设置 quecpi.flash.qdlPath 指向 QDL.exe。');
     return;
   }
-  channel.appendLine(`✅ QDL: ${qdl}`);
+  channel.appendLine('✅ QDL: ' + qdl);
 
   // 3. confirm (destructive)
   const confirm = await vscode.window.showWarningMessage(
-    `确认向板子烧录？将覆盖全部系统分区！\n工具: ${qdl}\n包: ${rev}\n存储: ${storage || 'auto'}`,
+    '确认向板子烧录？将覆盖全部系统分区！\n工具: ' + qdl + '\n包: ' + rev + '\n存储: ' + (storage || 'auto'),
     { modal: true },
     '开始烧录'
   );
@@ -56,9 +81,9 @@ export async function runFlash(channel: vscode.OutputChannel, storage?: 'ufs' | 
 
   // 4. enter EDL: adb reboot edl
   const adb = Cfg.adbPath();
-  channel.appendLine(`\n[1/3] 进入 EDL: ${adb} reboot edl`);
+  channel.appendLine('\n[1/3] 进入 EDL: ' + adb + ' reboot edl');
   try {
-    execSync(`"${adb}" reboot edl`, { timeout: 10000 });
+    execSync('"' + adb + '" reboot edl', { timeout: 10000 });
     channel.appendLine('   adb reboot edl 已发送');
   } catch {
     channel.appendLine('   ⚠ adb reboot edl 失败（板子可能已离线，或已通过硬件方式进 EDL）');
@@ -74,12 +99,12 @@ export async function runFlash(channel: vscode.OutputChannel, storage?: 'ufs' | 
     await sleep(2000);
     const edl = await detectEdl();
     if (edl) {
-      channel.appendLine(`   ✅ 检测到 EDL: ${edl}（第 ${(i + 1) * 2} 秒）`);
+      channel.appendLine('   ✅ 检测到 EDL: ' + edl + '（第 ' + ((i + 1) * 2) + ' 秒）');
       edlFound = true;
       break;
     }
     if (i % 5 === 4) {
-      channel.appendLine(`   ... 等待中（${(i + 1) * 2}s）`);
+      channel.appendLine('   ... 等待中（' + ((i + 1) * 2) + 's）');
     }
   }
   if (!edlFound) {
@@ -87,13 +112,14 @@ export async function runFlash(channel: vscode.OutputChannel, storage?: 'ufs' | 
   }
 
   // 6. run QDL
+  const sep = isWindows ? '\\' : '/';
   const args = [
     ...(storage ? ['--storage', storage] : []),
     firehose,
-    ...raws.map((f) => path.join(pkg, f)),
-    ...patches.map((f) => path.join(pkg, f)),
+    ...raws.map((f) => pkg + sep + f),
+    ...patches.map((f) => pkg + sep + f),
   ];
-  channel.appendLine(`\n[3/3] 烧录: ${qdl} ${args.join(' ')}\n`);
+  channel.appendLine('\n[3/3] 烧录: ' + qdl + ' ' + args.join(' ') + '\n');
 
   const env = isWindows
     ? { ...process.env }
