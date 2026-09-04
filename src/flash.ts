@@ -101,12 +101,13 @@ async function doFlash(channel: vscode.OutputChannel, storage?: 'ufs' | 'emmc'):
 
   // 5. enter EDL: adb reboot edl (fire and forget)
   const adb = Cfg.adbPath();
-  channel.appendLine('\n[1/3] 进入 EDL: ' + adb + ' reboot edl');
+  channel.appendLine('\n[1/3] 进入 EDL: ' + adb + ' shell reboot edl');
+  channel.appendLine('   如果板子已在 EDL 模式（9008 端口已出现），可跳过此步。');
   try {
     spawn(adb, ['shell', 'reboot', 'edl'], { detached: true, stdio: 'ignore' }).unref();
-    channel.appendLine('   adb reboot edl 已发送（板子将重启进 EDL）');
+    channel.appendLine('   adb reboot edl 已发送（板子将重启进 EDL，adb 连接会断开，这是正常的）');
   } catch {
-    channel.appendLine('   ⚠ adb 发送失败，请手动按板子 EMG_DOWNLOAD 按键进 EDL');
+    channel.appendLine('   ⚠ adb 发送失败（板子可能已进 EDL），继续等待 9008 设备...');
   }
 
   // 6. wait for EDL device (async polling — does NOT block event loop)
@@ -139,7 +140,9 @@ async function doFlash(channel: vscode.OutputChannel, storage?: 'ufs' | 'emmc'):
     ...raws.map((f) => pkg + sep + f),
     ...patches.map((f) => pkg + sep + f),
   ];
-  channel.appendLine('\n[3/3] 烧录: ' + qdl + ' ' + args.join(' ') + '\n');
+  channel.appendLine('\n[3/3] 烧录: ' + qdl + ' ' + args.join(' '));
+  channel.appendLine('   工作目录: ' + pkg);
+  channel.appendLine('   烧录中...（请勿关闭 VS Code 或断开 USB）\n');
 
   const env = isWindows
     ? { ...process.env }
@@ -149,16 +152,25 @@ async function doFlash(channel: vscode.OutputChannel, storage?: 'ufs' | 'emmc'):
   channel.appendLine('\n[烧录完成] 若最后显示 "partition 1 is now bootable" 即为成功，板子将自动重启。');
 }
 
-/** Async detect EDL device — uses execFile (non-blocking), NOT execSync. */
+/** Async detect EDL device — uses execFile (non-blocking), NOT execSync.
+ *  Returns device name + InstanceId for verification. */
 function detectEdlAsync(): Promise<string | null> {
   return new Promise((resolve) => {
     if (isWindows) {
       execFile('powershell', ['-NoProfile', '-Command',
-        "Get-PnpDevice -PresentOnly | Where-Object { $_.InstanceId -match '05c6.*9008|05c6.*900e' } | Select-Object -First 1 -ExpandProperty FriendlyName"],
+        "Get-PnpDevice -PresentOnly | Where-Object { $_.InstanceId -match '05c6.*9008|05c6.*900e' } | Select-Object -First 1 FriendlyName,InstanceId | Format-List"],
         { timeout: 5000, encoding: 'utf-8' },
         (err, stdout) => {
           if (err) { resolve(null); return; }
-          resolve(stdout.trim() || null);
+          const out = stdout.trim();
+          if (out) {
+            // Parse FriendlyName + InstanceId
+            const name = (out.match(/FriendlyName\s*:\s*(.+)/) || [])[1]?.trim() || out;
+            const id = (out.match(/InstanceId\s*:\s*(.+)/) || [])[1]?.trim() || '';
+            resolve(name + (id ? ' [' + id + ']' : ''));
+          } else {
+            resolve(null);
+          }
         }
       );
     } else {
