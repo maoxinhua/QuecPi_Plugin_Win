@@ -78,20 +78,22 @@ async function doFlash(channel: vscode.OutputChannel, storage?: 'ufs' | 'emmc'):
     pkg = flashDir;
     firehose = flashDir + '\\prog_firehose_Qcm6490_ddr.elf';
 
-    // Skip copy if files already exist (saves 14GB copy time on subsequent flashes)
+    // Skip copy if local files exist AND source is not newer (compare timestamps)
     if (fs.existsSync(firehose) && fs.existsSync(flashDir + '\\rawprogram0.xml')) {
-      // Verify by comparing firehose file size (source vs local)
-      let srcSize = 0;
+      // Get source modification time (WSL stat, epoch seconds)
+      let srcMtime = 0;
       try {
-        const out = await execAsyncOutput('wsl', ['bash', '-c', 'stat -c %s ' + firehoseLinux], 5000);
-        srcSize = parseInt(out.trim()) || 0;
+        const out = await execAsyncOutput('wsl', ['bash', '-c', 'stat -c %Y ' + firehoseLinux], 5000);
+        srcMtime = parseInt(out.trim()) || 0;
       } catch { /* ignore */ }
-      const localSize = fs.statSync(firehose).size;
-      if (srcSize > 0 && srcSize === localSize) {
-        channel.appendLine('✅ 烧录包已存在（跳过 ' + Math.round(localSize / 1048576) + 'MB 复制）');
+      // Get local modification time (epoch ms → seconds)
+      const localMtime = Math.floor(fs.statSync(firehose).mtimeMs / 1000);
+      if (srcMtime > 0 && srcMtime <= localMtime) {
+        // Source is same age or older → local copy is up-to-date, skip copy
+        channel.appendLine('✅ 烧录包已是最新（跳过复制，上次更新: ' + new Date(localMtime * 1000).toLocaleString() + '）');
       } else {
-        // Size mismatch → re-copy
-        channel.appendLine('[debug] 文件变化，重新复制...');
+        // Source is newer (new buildpackage) → re-copy
+        channel.appendLine('[debug] 镜像已更新，重新复制...');
         await copyPackage(pkgLinux, channel);
       }
     } else {
