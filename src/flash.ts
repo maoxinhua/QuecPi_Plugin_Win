@@ -77,12 +77,27 @@ async function doFlash(channel: vscode.OutputChannel, storage?: 'ufs' | 'emmc'):
     const flashDir = 'D:\\quecpi-flash';
     pkg = flashDir;
     firehose = flashDir + '\\prog_firehose_Qcm6490_ddr.elf';
-    channel.appendLine('[debug] copying package to D:\\quecpi-flash...');
-    try {
-      await execAsync('wsl', ['bash', '-c', 'rm -rf /mnt/d/quecpi-flash && mkdir -p /mnt/d/quecpi-flash && cp -r ' + pkgLinux + '/* /mnt/d/quecpi-flash/'], 120000);
-      channel.appendLine('[debug] copy done');
-    } catch (e: any) {
-      channel.appendLine('[debug] copy failed: ' + (e?.message || e));
+
+    // Skip copy if files already exist (saves 14GB copy time on subsequent flashes)
+    if (fs.existsSync(firehose) && fs.existsSync(flashDir + '\\rawprogram0.xml')) {
+      // Verify by comparing firehose file size (source vs local)
+      let srcSize = 0;
+      try {
+        const out = await execAsyncOutput('wsl', ['bash', '-c', 'stat -c %s ' + firehoseLinux], 5000);
+        srcSize = parseInt(out.trim()) || 0;
+      } catch { /* ignore */ }
+      const localSize = fs.statSync(firehose).size;
+      if (srcSize > 0 && srcSize === localSize) {
+        channel.appendLine('✅ 烧录包已存在（跳过 ' + Math.round(localSize / 1048576) + 'MB 复制）');
+      } else {
+        // Size mismatch → re-copy
+        channel.appendLine('[debug] 文件变化，重新复制...');
+        await copyPackage(pkgLinux, channel);
+      }
+    } else {
+      // First time → copy
+      channel.appendLine('[debug] 首次复制烧录包到 D:\\quecpi-flash...');
+      await copyPackage(pkgLinux, channel);
     }
   }
 
@@ -220,6 +235,25 @@ function execAsync(cmd: string, args: string[], timeout: number): Promise<void> 
     proc.on('close', (code) => { if (code === 0) resolve(); else reject(new Error(`exit ${code}`)); });
     proc.on('error', reject);
   });
+}
+
+/** Async exec with stdout capture. */
+function execAsyncOutput(cmd: string, args: string[], timeout: number): Promise<string> {
+  return new Promise((resolve, reject) => {
+    execFile(cmd, args, { timeout, encoding: 'utf-8' }, (err, stdout) => {
+      if (err) reject(err); else resolve(stdout || '');
+    });
+  });
+}
+
+/** Copy flash package from WSL to D: drive (non-blocking). */
+async function copyPackage(pkgLinux: string, channel: vscode.OutputChannel): Promise<void> {
+  try {
+    await execAsync('wsl', ['bash', '-c', 'rm -rf /mnt/d/quecpi-flash && mkdir -p /mnt/d/quecpi-flash && cp -r ' + pkgLinux + '/* /mnt/d/quecpi-flash/'], 300000);
+    channel.appendLine('[debug] copy done');
+  } catch (e: any) {
+    channel.appendLine('[debug] copy failed: ' + (e?.message || e));
+  }
 }
 
 function sleep(ms: number): Promise<void> {
